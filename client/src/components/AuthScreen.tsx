@@ -4,6 +4,8 @@ import { api, jsonBody } from "../lib/api";
 import type { User, UserRole } from "../types";
 
 type Props = {
+  initialMode?: "login" | "register";
+  onModeChange?: (mode: "login" | "register") => void;
   onAuthenticated: (user: User) => void;
 };
 
@@ -22,8 +24,8 @@ const demoPhones: Record<UserRole, string> = {
   DISPATCHER: "+998900000004",
 };
 
-export default function AuthScreen({ onAuthenticated }: Props) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+export default function AuthScreen({ initialMode = "login", onModeChange, onAuthenticated }: Props) {
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState(import.meta.env.DEV ? demoPhones.SHIPPER : "");
   const [password, setPassword] = useState(import.meta.env.DEV ? "Demo1234!" : "");
@@ -58,6 +60,12 @@ export default function AuthScreen({ onAuthenticated }: Props) {
     setPhone(demoPhones[selectedRole]);
     setPassword("Demo1234!");
     setError("");
+  }
+
+  function changeMode(nextMode: "login" | "register") {
+    setMode(nextMode);
+    setError("");
+    onModeChange?.(nextMode);
   }
 
   return (
@@ -129,7 +137,7 @@ export default function AuthScreen({ onAuthenticated }: Props) {
 
           <div className="auth-switch">
             <span>{mode === "login" ? "Yangi foydalanuvchimisiz?" : "Profilingiz bormi?"}</span>
-            <button type="button" className="text-button" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}>
+            <button type="button" className="text-button" onClick={() => changeMode(mode === "login" ? "register" : "login")}>
               {mode === "login" ? "Ro‘yxatdan o‘tish" : "Kirish"}
             </button>
           </div>
