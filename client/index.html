@@ -6,6 +6,19 @@
     <meta name="theme-color" content="#111214" />
     <meta name="description" content="YUKBOR yuk egasi va tashuvchini bitta ish jarayonida bog‘laydi." />
     <title>YUKBOR — yukdan reysgacha yagona ish jarayoni</title>
+    <script>
+      try {
+        if (
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+          window.localStorage.getItem("yukbor-intro-seen") !== "1"
+        ) {
+          window.localStorage.setItem("yukbor-intro-seen", "1");
+          document.documentElement.dataset.yukborIntro = "show";
+        }
+      } catch {
+        // If browser storage is unavailable, skip the intro rather than risk blocking the app.
+      }
+    </script>
   </head>
   <body>
     <!--
@@ -15,6 +28,53 @@
       FIRST VIEWPORT: Brand/actions above a two-column message and four-stage route board; primary join action sits beneath the headline.
       FORM: Open four-stage process rail, grounded structure 7 of 7; seed 6cb7c04c. No external staging challenger.
     -->
+    <div class="site-intro" id="site-intro" role="group" aria-label="YUKBOR tanishtiruvi" hidden>
+      <div class="site-intro-content">
+        <div class="site-intro-brand">
+          <span class="site-intro-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 24" fill="none">
+              <path d="M2 4h17v14H2zM19 9h6l5 5v4H19z" fill="currentColor" />
+              <path d="M22 11v4h5l-3.5-4z" fill="#20211f" />
+              <circle cx="8" cy="19" r="2.5" fill="#f3f2ef" />
+              <circle cx="25" cy="19" r="2.5" fill="#f3f2ef" />
+            </svg>
+          </span>
+          <span>YUKBOR<span class="site-intro-dot">.</span></span>
+        </div>
+        <div class="site-intro-road" aria-hidden="true">
+          <span class="site-intro-stop site-intro-stop-start"></span>
+          <span class="site-intro-track"></span>
+          <svg class="site-intro-truck" viewBox="0 0 32 24" fill="none">
+            <path d="M2 4h17v14H2zM19 9h6l5 5v4H19z" fill="currentColor" />
+            <path d="M22 11v4h5l-3.5-4z" fill="#20211f" />
+            <circle cx="8" cy="19" r="2.5" fill="#f3f2ef" />
+            <circle cx="25" cy="19" r="2.5" fill="#f3f2ef" />
+          </svg>
+          <span class="site-intro-stop site-intro-stop-end"></span>
+        </div>
+        <p>Yuk va tashuvchilar uchun yagona ish maydoni.</p>
+      </div>
+      <button class="site-intro-skip" id="site-intro-skip" type="button">
+        O‘tkazib yuborish <span aria-hidden="true">→</span>
+      </button>
+    </div>
+    <script>
+      const intro = document.getElementById("site-intro");
+      const introSkip = document.getElementById("site-intro-skip");
+
+      if (intro && document.documentElement.dataset.yukborIntro === "show") {
+        intro.hidden = false;
+        window.setTimeout(() => {
+          delete document.documentElement.dataset.yukborIntro;
+          intro.hidden = true;
+        }, 1120);
+      }
+
+      introSkip?.addEventListener("click", () => {
+        delete document.documentElement.dataset.yukborIntro;
+        if (intro) intro.hidden = true;
+      });
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
