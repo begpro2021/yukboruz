@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SHIPPER
+  DRIVER
+  FLEET
+  DISPATCHER
+}
+
+enum CargoStatus {
+  OPEN
+  ASSIGNED
+  COMPLETED
+  CANCELLED
+}
+
+enum DealMode {
+  AUCTION
+  FIXED
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum TripStatus {
+  ASSIGNED
+  LOADING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cargos       Cargo[]
+  trucks       Truck[]
+  bids         Bid[]
+  shipperTrips Trip[]   @relation("ShipperTrips")
+  carrierTrips Trip[]   @relation("CarrierTrips")
+
+  @@index([role])
+}
+
+model Cargo {
+  id            String      @id @default(cuid())
+  publicId      String      @unique
+  ownerId       String
+  owner         User        @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  origin        String
+  destination   String
+  cargoName     String
+  bodyType      String
+  weightTons    Float
+  volumeM3      Float
+  priceUzs      Int
+  dealMode      DealMode    @default(AUCTION)
+  status        CargoStatus @default(OPEN)
+  loadingAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  bids          Bid[]
+  trips         Trip[]
+
+  @@index([status, createdAt])
+  @@index([origin, destination])
+}
+
+model Truck {
+  id           String   @id @default(cuid())
+  publicId     String   @unique
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  vehicle      String
+  plate        String
+  bodyType     String
+  capacityTons Float
+  volumeM3     Float
+  currentCity  String
+  targetRoute  String
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bids         Bid[]
+  trips        Trip[]
+
+  @@index([bodyType, available])
+  @@index([currentCity])
+}
+
+model Bid {
+  id          String    @id @default(cuid())
+  cargoId     String
+  cargo       Cargo     @relation(fields: [cargoId], references: [id], onDelete: Cascade)
+  driverId    String
+  driver      User      @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  truckId     String?
+  truck       Truck?    @relation(fields: [truckId], references: [id], onDelete: SetNull)
+  amountUzs   Int
+  note        String?
+  status      BidStatus @default(PENDING)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  trip        Trip?
+
+  @@index([cargoId, status])
+  @@index([driverId, createdAt])
+}
+
+model Trip {
+  id            String     @id @default(cuid())
+  cargoId       String
+  cargo         Cargo      @relation(fields: [cargoId], references: [id], onDelete: Restrict)
+  bidId         String     @unique
+  bid           Bid        @relation(fields: [bidId], references: [id], onDelete: Restrict)
+  shipperId     String
+  shipper       User       @relation("ShipperTrips", fields: [shipperId], references: [id], onDelete: Restrict)
+  carrierId     String
+  carrier       User       @relation("CarrierTrips", fields: [carrierId], references: [id], onDelete: Restrict)
+  truckId       String?
+  truck         Truck?     @relation(fields: [truckId], references: [id], onDelete: SetNull)
+  status        TripStatus @default(ASSIGNED)
+  progressPct   Int        @default(10)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([shipperId, status])
+  @@index([carrierId, status])
+}
